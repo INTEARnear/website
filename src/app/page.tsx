@@ -81,7 +81,7 @@ export default function Home() {
                     <EvervaultCard text="Shill"/>
 
                     <h2 className="dark:text-white text-black mt-4 text-sm font-light">
-                        your favorite GPU vendor on <a
+                        your favorite GPU vendor on <a className="text-blue-500"
                         href={"https://near.social/slimedragon.near/widget/ShillGPU"}>ShillGPU</a> and
                         increase your bag.
                     </h2>
@@ -97,7 +97,7 @@ export default function Home() {
                     <EvervaultCard text="Lock"/>
 
                     <h2 className="dark:text-white text-black mt-4 text-sm font-light">
-                        LP of your memecoin, and <a href={"https://near.social/slimedragon.near/widget/LockLP"}>check</a> if LP of a memecoin is locked. (not audited yet)
+                        LP of your memecoin, and <a className="text-blue-500" href={"https://near.social/slimedragon.near/widget/LockLP"}>check</a> if LP of a memecoin is locked. (not audited yet)
                     </h2>
                 </div>
 
@@ -111,7 +111,7 @@ export default function Home() {
                     <EvervaultCard text="Setup"/>
 
                     <h2 className="dark:text-white text-black mt-4 text-sm font-light">
-                        a bot on telegram that notifies about token buys, potlock donations, helps distribute tokens to the community, and it&apos;s completely free!
+                        a <a href="https://t.me/intearbot" className="text-blue-500">bot</a> on telegram that notifies about token buys, potlock donations, helps distribute tokens to the community, and it&apos;s completely free!
                     </h2>
                 </div>
             </div>
