@@ -41,7 +41,7 @@ export default function Home() {
                     fill="white"
                 />
                 <h1 className="md:text-7xl text-3xl lg:text-9xl font-bold text-center text-white relative z-20">
-                    INTEAR <span className="text-neutral-500">IS ALREADY INSIDE</span>
+                    INTEAR <span className="text-neutral-500">IS INSIDE</span>
                 </h1>
                 <div className="w-[80rem] h-40 relative">
                     {/* Gradients */}
