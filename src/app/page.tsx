@@ -42,24 +42,44 @@ interface Trade {
 
 export default function Home() {
   const [currentOracleIndex, setCurrentOracleIndex] = useState(0);
-  const [currentCompeteCarouselIndex, setCurrentCompeteCarouselIndex] = useState(0);
+  const [currentCompeteCarouselIndex, setCurrentCompeteCarouselIndex] =
+    useState(0);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [tokenMetadata, setTokenMetadata] = useState<{ [key: string]: TokenMetadata }>({});
+  const [tokenMetadata, setTokenMetadata] = useState<{
+    [key: string]: TokenMetadata;
+  }>({});
   const tradesContainerRef = useRef<HTMLDivElement>(null);
 
   const partners = [
-    { name: 'MEME.COOKING', url: 'https://meme.cooking', image: '/meme-cooking.webp' },
+    {
+      name: 'MEME.COOKING',
+      url: 'https://meme.cooking',
+      image: '/meme-cooking.webp',
+    },
     { name: 'AIDOLS', url: 'https://aidols.bot', image: '/aidols.webp' },
-    { name: 'DRAGON TECH', url: 'https://t.me/Dragon_Tech_Bot', image: '/dragontech.webp' },
-    { name: 'POTLOCK', url: 'https://potlock.org', image: '/potlock.webp' }
+    {
+      name: 'DRAGON TECH',
+      url: 'https://t.me/Dragon_Tech_Bot',
+      image: '/dragontech.webp',
+    },
+    { name: 'POTLOCK', url: 'https://potlock.org', image: '/potlock.webp' },
   ];
 
   const oracles = [
     ['GPT-4o', 'Centralized AI inference oracle hosted by Intear'],
-    ['Bitcoin Transaction Inclusion', 'Trustless oracle that uses Light Client to verify Bitcoin transactions on-chain'],
-    ['Reclaim GPT-4o', 'AI inference oracle, verified using Reclaim Protocol zkFetch'],
-    ['NEAR AI Inference', 'Centralized, but free. Choose any model available on app.near.ai'],
+    [
+      'Bitcoin Transaction Inclusion',
+      'Trustless oracle that uses Light Client to verify Bitcoin transactions on-chain',
+    ],
+    [
+      'Reclaim GPT-4o',
+      'AI inference oracle, verified using Reclaim Protocol zkFetch',
+    ],
+    [
+      'NEAR AI Inference',
+      'Centralized, but free. Choose any model available on app.near.ai',
+    ],
   ];
 
   const competeWith = [
@@ -74,9 +94,7 @@ export default function Home() {
   // Auto-rotate oracles every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentOracleIndex((prevIndex) =>
-        (prevIndex + 1) % oracles.length
-      );
+      setCurrentOracleIndex(prevIndex => (prevIndex + 1) % oracles.length);
     }, 3000);
 
     return () => clearInterval(interval);
@@ -85,8 +103,8 @@ export default function Home() {
   // Auto-rotate web2/web3 carousels every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentCompeteCarouselIndex((prevIndex) =>
-        (prevIndex + 1) % competeWith.length
+      setCurrentCompeteCarouselIndex(
+        prevIndex => (prevIndex + 1) % competeWith.length
       );
     }, 5000);
 
@@ -104,14 +122,16 @@ export default function Home() {
         const data = await response.json();
 
         const metadata: { [key: string]: TokenMetadata } = {};
-        Object.entries(data as Record<string, TokenApiData>).forEach(([tokenId, tokenData]) => {
-          metadata[tokenId] = {
-            name: tokenData.metadata?.name || tokenId,
-            symbol: tokenData.metadata?.symbol || tokenId,
-            decimals: tokenData.metadata?.decimals || 24,
-            price_usd: tokenData.price_usd
-          };
-        });
+        Object.entries(data as Record<string, TokenApiData>).forEach(
+          ([tokenId, tokenData]) => {
+            metadata[tokenId] = {
+              name: tokenData.metadata?.name || tokenId,
+              symbol: tokenData.metadata?.symbol || tokenId,
+              decimals: tokenData.metadata?.decimals || 24,
+              price_usd: tokenData.price_usd,
+            };
+          }
+        );
 
         setTokenMetadata(metadata);
       } catch (error) {
@@ -170,34 +190,40 @@ export default function Home() {
       try {
         setIsConnected(true);
 
-        await client.streamEvents<TradeEvent>('trade_swap', null, async (event) => {
-          if (!isActive) return;
+        await client.streamEvents<TradeEvent>(
+          'trade_swap',
+          null,
+          async event => {
+            if (!isActive) return;
 
-          const balanceChanges = event.balance_changes;
-          const entries = Object.entries(balanceChanges);
+            const balanceChanges = event.balance_changes;
+            const entries = Object.entries(balanceChanges);
 
-          // Only process trades with exactly 2 balance changes (one positive, one negative)
-          if (entries.length !== 2) return;
+            // Only process trades with exactly 2 balance changes (one positive, one negative)
+            if (entries.length !== 2) return;
 
-          const positive = entries.find(([, amount]) => parseInt(amount) > 0);
-          const negative = entries.find(([, amount]) => parseInt(amount) < 0);
+            const positive = entries.find(([, amount]) => parseInt(amount) > 0);
+            const negative = entries.find(([, amount]) => parseInt(amount) < 0);
 
-          if (!positive || !negative) return;
+            if (!positive || !negative) return;
 
-          const trade: Trade = {
-            id: event.receipt_id,
-            trader: event.trader,
-            balanceChanges: balanceChanges,
-            transactionId: event.transaction_id,
-            blockHeight: event.block_height,
-            timestamp: new Date(parseInt(event.block_timestamp_nanosec) / 1000000).toLocaleTimeString()
-          };
+            const trade: Trade = {
+              id: event.receipt_id,
+              trader: event.trader,
+              balanceChanges: balanceChanges,
+              transactionId: event.transaction_id,
+              blockHeight: event.block_height,
+              timestamp: new Date(
+                parseInt(event.block_timestamp_nanosec) / 1000000
+              ).toLocaleTimeString(),
+            };
 
-          setTrades(prev => {
-            const updated = [...prev, trade].slice(-1000); // Keep last 1000, remove from top
-            return updated;
-          });
-        });
+            setTrades(prev => {
+              const updated = [...prev, trade].slice(-1000); // Keep last 1000, remove from top
+              return updated;
+            });
+          }
+        );
       } catch (error) {
         console.error('Stream error:', error);
         setIsConnected(false);
@@ -216,7 +242,8 @@ export default function Home() {
   // Auto-scroll to bottom when new trades are added
   useEffect(() => {
     if (tradesContainerRef.current) {
-      tradesContainerRef.current.scrollTop = tradesContainerRef.current.scrollHeight;
+      tradesContainerRef.current.scrollTop =
+        tradesContainerRef.current.scrollHeight;
     }
   }, [trades]);
 
@@ -228,11 +255,14 @@ export default function Home() {
       <section className="relative bg-black overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
                              radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                             radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%)`
-          }}></div>
+                             radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%)`,
+            }}
+          ></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
@@ -249,14 +279,17 @@ export default function Home() {
                   <div
                     className="transition-transform duration-500 ease-in-out"
                     style={{
-                      transform: `translateY(-${currentCompeteCarouselIndex * 32}px)`
+                      transform: `translateY(-${currentCompeteCarouselIndex * 32}px)`,
                     }}
                   >
                     {competeWith.map((item, index) => (
                       <div
                         key={index}
-                        className={`h-8 flex items-center font-semibold ${index === currentCompeteCarouselIndex ? 'text-blue-400' : 'text-gray-300'
-                          }`}
+                        className={`h-8 flex items-center font-semibold ${
+                          index === currentCompeteCarouselIndex
+                            ? 'text-blue-400'
+                            : 'text-gray-300'
+                        }`}
                       >
                         {item.web2}
                       </div>
@@ -268,14 +301,17 @@ export default function Home() {
                   <div
                     className="transition-transform duration-500 ease-in-out"
                     style={{
-                      transform: `translateY(-${currentCompeteCarouselIndex * 32}px)`
+                      transform: `translateY(-${currentCompeteCarouselIndex * 32}px)`,
                     }}
                   >
                     {competeWith.map((item, index) => (
                       <div
                         key={index}
-                        className={`h-8 flex items-center font-semibold ${index === currentCompeteCarouselIndex ? 'text-red-400' : 'text-gray-300'
-                          }`}
+                        className={`h-8 flex items-center font-semibold ${
+                          index === currentCompeteCarouselIndex
+                            ? 'text-red-400'
+                            : 'text-gray-300'
+                        }`}
                       >
                         {item.web3}
                       </div>
@@ -360,27 +396,35 @@ export default function Home() {
               <div className="text-green-500 text-sm font-semibold tracking-wider uppercase mb-4">
                 RPC & INDEXING
               </div>
-              <h4 className="text-4xl font-bold mb-6 font-roboto">
-                Rainy
-              </h4>
+              <h4 className="text-4xl font-bold mb-6 font-roboto">Rainy</h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                Reliable RPC with additional methods for batching and token data,
-                combined with a powerful cloud indexer platform, meta-transaction
-                relayers, private wallet / Telegram bot hosting, and more.
+                Reliable RPC with additional methods for batching and token
+                data, combined with a powerful cloud indexer platform,
+                meta-transaction relayers, private wallet / Telegram bot
+                hosting, and more.
               </p>
 
               <div className="space-y-6 mb-8">
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Custom RPC methods for efficient batching and token operations (price, balances, holders, metadata, spam lists, search, and more)</p>
+                  <p className="text-gray-300">
+                    Custom RPC methods for efficient batching and token
+                    operations (price, balances, holders, metadata, spam lists,
+                    search, and more)
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Scalable cloud indexer platform for NEP-297 events of your contracts (real-time WebSocket or historical HTTP)</p>
+                  <p className="text-gray-300">
+                    Scalable cloud indexer platform for NEP-297 events of your
+                    contracts (real-time WebSocket or historical HTTP)
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Near-instant backfill of historical data from genesis block</p>
+                  <p className="text-gray-300">
+                    Near-instant backfill of historical data from genesis block
+                  </p>
                 </div>
               </div>
 
@@ -398,34 +442,57 @@ export default function Home() {
               {/* Real-time Trading Feed */}
               <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 p-8 rounded-2xl border border-green-800/30">
                 <div className="text-green-300 text-xs font-semibold tracking-wider uppercase mb-6 flex items-center">
-                  <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                  <div
+                    className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}
+                  ></div>
                   LIVE TRADES FROM REALTIME API
                 </div>
 
                 <div className="relative">
-                  <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-hidden" ref={tradesContainerRef}>
+                  <div
+                    className="space-y-3 max-h-80 overflow-y-auto scrollbar-hidden"
+                    ref={tradesContainerRef}
+                  >
                     {trades.length === 0 ? (
                       <div className="text-center text-gray-400 py-8">
-                        <div className="animate-pulse">Connecting to live feed...</div>
+                        <div className="animate-pulse">
+                          Connecting to live feed...
+                        </div>
                       </div>
                     ) : (
-                      trades.map((trade) => {
+                      trades.map(trade => {
                         const entries = Object.entries(trade.balanceChanges);
-                        const positive = entries.find(([, amount]) => parseInt(amount as string) > 0);
-                        const negative = entries.find(([, amount]) => parseInt(amount as string) < 0);
+                        const positive = entries.find(
+                          ([, amount]) => parseInt(amount as string) > 0
+                        );
+                        const negative = entries.find(
+                          ([, amount]) => parseInt(amount as string) < 0
+                        );
 
                         if (!positive || !negative) return null;
 
                         const boughtToken = formatTokenName(positive[0]);
                         const soldToken = formatTokenName(negative[0]);
-                        const boughtAmount = formatAmount(positive[1], positive[0]);
-                        const soldAmount = formatAmount(negative[1], negative[0]);
+                        const boughtAmount = formatAmount(
+                          positive[1],
+                          positive[0]
+                        );
+                        const soldAmount = formatAmount(
+                          negative[1],
+                          negative[0]
+                        );
 
                         return (
-                          <div key={trade.id} className="bg-gray-800/30 p-4 rounded-lg border border-gray-700 hover:border-green-500 transition-colors trade-item">
+                          <div
+                            key={trade.id}
+                            className="bg-gray-800/30 p-4 rounded-lg border border-gray-700 hover:border-green-500 transition-colors trade-item"
+                          >
                             <div className="flex justify-between items-start mb-2">
                               <div className="text-green-300 font-mono text-sm">
-                                {trade.trader.length >= 15 ? `${trade.trader.substring(0, 12)}…` : trade.trader} swapped
+                                {trade.trader.length >= 15
+                                  ? `${trade.trader.substring(0, 12)}…`
+                                  : trade.trader}{' '}
+                                swapped
                               </div>
                               <div className="text-gray-400 text-xs">
                                 {trade.timestamp}
@@ -434,13 +501,13 @@ export default function Home() {
 
                             <div className="flex items-center justify-between mb-2">
                               <div className="text-white text-sm">
-                                {soldAmount} {soldToken} → {boughtAmount} {boughtToken}
+                                {soldAmount} {soldToken} → {boughtAmount}{' '}
+                                {boughtToken}
                               </div>
                             </div>
 
                             <div className="flex justify-between items-center">
-                              <div>
-                              </div>
+                              <div></div>
                               <a
                                 href={`https://nearblocks.io/txns/${trade.transactionId}`}
                                 target="_blank"
@@ -479,22 +546,31 @@ export default function Home() {
                 Intear Wallet
               </h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                The fastest wallet on NEAR Protocol. Experience seamless transactions
-                with features for advanced traders and unmatched performance.
+                The fastest wallet on NEAR Protocol. Experience seamless
+                transactions with features for advanced traders and unmatched
+                performance.
               </p>
 
               <div className="space-y-6 mb-8">
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Lightning-fast transaction processing, send multiple transactions at once</p>
+                  <p className="text-gray-300">
+                    Lightning-fast transaction processing, send multiple
+                    transactions at once
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Log in with Google, Face ID, Passkeys, Ethereum, Solana, no need to save seed phrase</p>
+                  <p className="text-gray-300">
+                    Log in with Google, Face ID, Passkeys, Ethereum, Solana, no
+                    need to save seed phrase
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Most up-to-date ecosystem map and easy onboarding</p>
+                  <p className="text-gray-300">
+                    Most up-to-date ecosystem map and easy onboarding
+                  </p>
                 </div>
               </div>
 
@@ -552,21 +628,31 @@ export default function Home() {
                 Bettear Bot
               </h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                The fastest trading bot on NEAR Protocol. Blink and it&apos;s final
+                The fastest trading bot on NEAR Protocol. Blink and it&apos;s
+                final
               </p>
 
               <div className="space-y-6 mb-8">
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-purple-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Trade on Rhea and NEAR Intents, and all major launchpads: meme.cooking, AIdols, GraFun</p>
+                  <p className="text-gray-300">
+                    Trade on Rhea and NEAR Intents, and all major launchpads:
+                    meme.cooking, AIdols, GraFun
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-purple-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Have an unfair advantage: Trade much faster than on official websites</p>
+                  <p className="text-gray-300">
+                    Have an unfair advantage: Trade much faster than on official
+                    websites
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-purple-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Wallet Tracking, new token alerts, sniping, copy-trade, DCA, and <b>much</b> more</p>
+                  <p className="text-gray-300">
+                    Wallet Tracking, new token alerts, sniping, copy-trade, DCA,
+                    and <b>much</b> more
+                  </p>
                 </div>
               </div>
 
@@ -586,11 +672,16 @@ export default function Home() {
               {/* Trading Groups */}
               <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-8 rounded-2xl border border-purple-800/30">
                 <div className="text-purple-300 text-sm font-semibold tracking-wider uppercase mb-6">
-                  Or follow these pre-made groups:
+                  Or follow these pre-made channels:
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <a href="https://t.me/sh1tc0in" target="_blank" rel="noopener noreferrer" className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer">
+                  <a
+                    href="https://t.me/sh1tc0in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer"
+                  >
                     <div className="flex justify-center mb-4">
                       <Image
                         src="/shitcoins.jpg"
@@ -600,10 +691,19 @@ export default function Home() {
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     </div>
-                    <div className="text-white font-semibold mb-2">shitcoins</div>
-                    <div className="text-gray-400 text-sm group-hover:text-purple-300">Sends a message anytime a new token gets launched</div>
+                    <div className="text-white font-semibold mb-2">
+                      shitcoins
+                    </div>
+                    <div className="text-gray-400 text-sm group-hover:text-purple-300">
+                      Sends a message anytime a new token gets launched
+                    </div>
                   </a>
-                  <a href="https://t.me/near_trending" target="_blank" rel="noopener noreferrer" className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer">
+                  <a
+                    href="https://t.me/near_trending"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer"
+                  >
                     <div className="flex justify-center mb-4">
                       <Image
                         src="/near-trending.jpg"
@@ -613,10 +713,19 @@ export default function Home() {
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     </div>
-                    <div className="text-white font-semibold mb-2">NEAR Trending</div>
-                    <div className="text-gray-400 text-sm group-hover:text-purple-300">Follow large buys of memecoins</div>
+                    <div className="text-white font-semibold mb-2">
+                      NEAR Trending
+                    </div>
+                    <div className="text-gray-400 text-sm group-hover:text-purple-300">
+                      Follow large buys of memecoins
+                    </div>
                   </a>
-                  <a href="https://t.me/near_dumpers" target="_blank" rel="noopener noreferrer" className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer">
+                  <a
+                    href="https://t.me/near_dumpers"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer"
+                  >
                     <div className="flex justify-center mb-4">
                       <Image
                         src="/near-dumpers.jpg"
@@ -626,19 +735,43 @@ export default function Home() {
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     </div>
-                    <div className="text-white font-semibold mb-2">NEAR Dumpers</div>
-                    <div className="text-gray-400 text-sm group-hover:text-purple-300">See every large memecoin selloff</div>
+                    <div className="text-white font-semibold mb-2">
+                      NEAR Dumpers
+                    </div>
+                    <div className="text-gray-400 text-sm group-hover:text-purple-300">
+                      See every large memecoin selloff
+                    </div>
                   </a>
-                  <a href="https://t.me/BettearBot" target="_blank" rel="noopener noreferrer" className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer">
+                  <a
+                    href="https://t.me/BettearBot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors text-center group cursor-pointer"
+                  >
                     <div className="flex justify-center mb-4">
                       <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
-                        <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <svg
+                          className="w-6 h-6 text-gray-300"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
                         </svg>
                       </div>
                     </div>
-                    <div className="text-white font-semibold mb-2">Your own</div>
-                    <div className="text-gray-400 text-sm group-hover:text-purple-300">Did you know that you can set up a bot like this in your own group / channel?</div>
+                    <div className="text-white font-semibold mb-2">
+                      Your own
+                    </div>
+                    <div className="text-gray-400 text-sm group-hover:text-purple-300">
+                      Did you know that you can set up a bot like this in your
+                      own group / channel?
+                    </div>
                   </a>
                 </div>
               </div>
@@ -656,7 +789,7 @@ export default function Home() {
             backgroundImage: 'url("TODO")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
           }}
         ></div>
 
@@ -665,23 +798,31 @@ export default function Home() {
             <div className="text-red-500 text-sm font-semibold tracking-wider uppercase mb-4">
               SELF-SERVE MARKET MAKING FOR YOUR TOKEN
             </div>
-            <h4 className="text-4xl font-bold mb-6 font-roboto">
-              PumpItBetty
-            </h4>
+            <h4 className="text-4xl font-bold mb-6 font-roboto">PumpItBetty</h4>
             <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
-              Professional (not really) market making tool designed for NEAR, Solana, and Sui ecosystems.
+              Professional (not really) market making tool designed for NEAR,
+              Solana, and Sui ecosystems.
               <br />
-              Or if you&apos;re a degen: buy and sell from 1000 accounts with a simple dashboard.
+              Or if you&apos;re a degen: buy and sell from 1000 accounts with a
+              simple dashboard.
             </p>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">
               <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700">
-                <div className="text-green-400 text-2xl font-bold mb-2">NEAR</div>
-                <div className="text-gray-300">Pump any token on NEAR or on Intents</div>
+                <div className="text-green-400 text-2xl font-bold mb-2">
+                  NEAR
+                </div>
+                <div className="text-gray-300">
+                  Pump any token on NEAR or on Intents
+                </div>
               </div>
               <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700">
-                <div className="text-purple-400 text-2xl font-bold mb-2">Solana</div>
-                <div className="text-gray-300">Supports all DEXes that work with Jupiter, including Pump</div>
+                <div className="text-purple-400 text-2xl font-bold mb-2">
+                  Solana
+                </div>
+                <div className="text-gray-300">
+                  Supports all DEXes that work with Jupiter, including Pump
+                </div>
               </div>
               <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700">
                 <div className="text-blue-400 text-2xl font-bold mb-2">Sui</div>
@@ -715,23 +856,30 @@ export default function Home() {
                 Intear Oracle
               </h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                General-purpose oracle platform that utilizes NEAR&apos;s yield-resume functionality
-                for reliable, decentralized, and trustless data feeds for your AI, price, and other
-                applications.
+                General-purpose oracle platform that utilizes NEAR&apos;s
+                yield-resume functionality for reliable, decentralized, and
+                trustless data feeds for your AI, price, and other applications.
               </p>
 
               <div className="space-y-6 mb-8">
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-yellow-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Request data from oracles and get response within the same transaction</p>
+                  <p className="text-gray-300">
+                    Request data from oracles and get response within the same
+                    transaction
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-yellow-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">Flexible fee configuration if you want to sell your data</p>
+                  <p className="text-gray-300">
+                    Flexible fee configuration if you want to sell your data
+                  </p>
                 </div>
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-yellow-500 rounded-full flex-shrink-0 mt-1"></div>
-                  <p className="text-gray-300">As easy as a cross-contract call</p>
+                  <p className="text-gray-300">
+                    As easy as a cross-contract call
+                  </p>
                 </div>
               </div>
 
@@ -778,10 +926,11 @@ export default function Home() {
                       <button
                         key={index}
                         onClick={() => setCurrentOracleIndex(index)}
-                        className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 cursor-pointer ${index === currentOracleIndex
-                          ? 'bg-yellow-400 shadow-lg shadow-yellow-400/50'
-                          : 'bg-gray-600 hover:bg-gray-500'
-                          }`}
+                        className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 cursor-pointer ${
+                          index === currentOracleIndex
+                            ? 'bg-yellow-400 shadow-lg shadow-yellow-400/50'
+                            : 'bg-gray-600 hover:bg-gray-500'
+                        }`}
                       />
                     ))}
                   </div>
@@ -800,7 +949,8 @@ export default function Home() {
               Ready to dive deeper?
             </h4>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Explore our comprehensive documentation to get started with all Intear products and services.
+              Explore our comprehensive documentation to get started with all
+              Intear products and services.
             </p>
             <a
               href="https://docs.intear.tech"
@@ -854,12 +1004,12 @@ export default function Home() {
         }
 
         .scrollbar-hidden {
-          -ms-overflow-style: none;  /* Internet Explorer 10+ */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none; /* Internet Explorer 10+ */
+          scrollbar-width: none; /* Firefox */
         }
 
         .scrollbar-hidden::-webkit-scrollbar {
-          display: none;  /* Safari and Chrome */
+          display: none; /* Safari and Chrome */
         }
       `}</style>
     </div>

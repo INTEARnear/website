@@ -7,7 +7,7 @@ A modern, responsive landing page template for Intear Technology Solutions built
 - **Modern Design**: Clean, professional layout with gradient hero section
 - **Responsive**: Fully responsive design that works on all devices
 - **Typography**: Uses Roboto font for consistent branding
-- **Sections**: 
+- **Sections**:
   - Header with navigation
   - Hero section with call-to-action buttons
   - About section with feature highlights
