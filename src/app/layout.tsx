@@ -16,8 +16,8 @@ const logo = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Intear - Technology Solutions',
-  description: 'Intear Technology Solutions - Innovation at its finest',
+  title: 'Intear',
+  description: 'Building the best web3 infrastructure',
 };
 
 export default function RootLayout({
