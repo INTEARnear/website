@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -28,9 +29,16 @@ export default function Header() {
           <div className="flex items-center">
             <Link
               href="/"
-              className="text-2xl font-bold text-white font-logo tracking-wider"
+              className="text-2xl font-bold text-white font-logo tracking-wider flex items-center space-x-3"
             >
-              INTEAR
+              <Image
+                src="/favicon.svg"
+                alt="Intear Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
+              <span>INTEAR</span>
             </Link>
           </div>
           <nav className="hidden md:flex space-x-8">

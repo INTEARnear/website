@@ -18,6 +18,11 @@ const logo = localFont({
 export const metadata: Metadata = {
   title: 'Intear',
   description: 'Building the best web3 infrastructure',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

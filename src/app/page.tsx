@@ -15,6 +15,11 @@ interface TradeEvent {
   block_timestamp_nanosec: string;
 }
 
+interface BlockEvent {
+  block_height: number;
+  block_timestamp_nanosec: string;
+}
+
 interface TokenMetadata {
   name: string;
   symbol: string;
@@ -40,16 +45,34 @@ interface Trade {
   timestamp: string;
 }
 
+interface BlockInfo {
+  blockHeight: number;
+  timestamp: string;
+  blockProductionTime: string;
+  frontendReceiveTime: string;
+  finalizedTime: string | null;
+  latency: number;
+  finalizedLatency: number | null;
+}
+
 export default function Home() {
   const [currentOracleIndex, setCurrentOracleIndex] = useState(0);
   const [currentCompeteCarouselIndex, setCurrentCompeteCarouselIndex] =
     useState(0);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [blocks, setBlocks] = useState<BlockInfo[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [isBlockConnected, setIsBlockConnected] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const [tokenMetadata, setTokenMetadata] = useState<{
     [key: string]: TokenMetadata;
   }>({});
+  const [autoScrollTrades, setAutoScrollTrades] = useState(true);
+  const [autoScrollBlocks, setAutoScrollBlocks] = useState(true);
+  const [isScrollingTrades, setIsScrollingTrades] = useState(false);
+  const [isScrollingBlocks, setIsScrollingBlocks] = useState(false);
   const tradesContainerRef = useRef<HTMLDivElement>(null);
+  const blocksContainerRef = useRef<HTMLDivElement>(null);
 
   const partners = [
     {
@@ -181,7 +204,7 @@ export default function Home() {
     }
   };
 
-  // WebSocket connection using official client
+  // WebSocket connection for trades using official client
   useEffect(() => {
     const client = new EventStreamClient('wss://ws-events-v3.intear.tech');
     let isActive = true;
@@ -219,7 +242,7 @@ export default function Home() {
             };
 
             setTrades(prev => {
-              const updated = [...prev, trade].slice(-1000); // Keep last 1000, remove from top
+              const updated = prev.length > 1100 ? [...prev, trade].slice(-1000) : [...prev, trade]; // Keep last 1000, remove from top
               return updated;
             });
           }
@@ -239,13 +262,204 @@ export default function Home() {
     };
   }, []);
 
+  // Function to fetch finalized block timestamp with retry logic
+  const fetchFinalizedTime = async (blockHeight: number): Promise<{ time: string, timestamp: number } | null> => {
+    const targetBlockHeight = blockHeight + 2;
+    const maxRetries = 5;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch('https://rpc.intear.tech', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'block',
+            id: 'dontcare',
+            params: {
+              block_id: targetBlockHeight
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.result?.header?.timestamp_nanosec) {
+          const finalizedTimestamp = parseInt(data.result.header.timestamp_nanosec) / 1000000;
+          const formattedTime = new Date(finalizedTimestamp).toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            fractionalSecondDigits: 3
+          });
+          return { time: formattedTime, timestamp: finalizedTimestamp };
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.log(`Attempt ${attempt}/${maxRetries} failed for block ${targetBlockHeight}:`, error);
+
+        if (attempt < maxRetries) {
+          // Wait 200ms before retry
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+    }
+
+    return null; // Failed after all retries
+  };
+
+  // WebSocket connection for block events
+  useEffect(() => {
+    const client = new EventStreamClient('wss://ws-events-v3.intear.tech');
+    let isActive = true;
+
+    const startBlockStreaming = async () => {
+      try {
+        setIsBlockConnected(true);
+
+        await client.streamEvents<BlockEvent>(
+          'block_info',
+          null,
+          async event => {
+            if (!isActive) return;
+
+            const blockTimestamp = parseInt(event.block_timestamp_nanosec) / 1000000;
+            const frontendReceiveTimestamp = Date.now();
+            const latency = (frontendReceiveTimestamp - blockTimestamp) / 1000; // Convert to seconds
+
+            const blockInfo: BlockInfo = {
+              blockHeight: event.block_height,
+              timestamp: new Date(blockTimestamp).toLocaleTimeString(),
+              blockProductionTime: new Date(blockTimestamp).toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                fractionalSecondDigits: 3
+              }),
+              frontendReceiveTime: new Date(frontendReceiveTimestamp).toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                fractionalSecondDigits: 3
+              }),
+              finalizedTime: null, // Will be filled asynchronously
+              latency: latency, // Keep original latency for reference
+              finalizedLatency: null, // Will be calculated when finalized time is available
+            };
+
+            setBlocks(prev => {
+              const updated = prev.length > 1100 ? [...prev, blockInfo].slice(-1000) : [...prev, blockInfo]; // Keep last 1000 blocks
+              return updated;
+            });
+
+            // Fetch finalized time asynchronously
+            fetchFinalizedTime(event.block_height).then(finalizedData => {
+              if (!isActive || !finalizedData) return;
+
+              // Calculate latency from finalized time
+              const finalizedLatency = (frontendReceiveTimestamp - finalizedData.timestamp) / 1000;
+
+              setBlocks(prev =>
+                prev.map(block =>
+                  block.blockHeight === event.block_height
+                    ? { ...block, finalizedTime: finalizedData.time, finalizedLatency }
+                    : block
+                )
+              );
+            });
+          }
+        );
+      } catch (error) {
+        console.error('Block stream error:', error);
+        setIsBlockConnected(false);
+      }
+    };
+
+    startBlockStreaming();
+
+    return () => {
+      isActive = false;
+      setIsBlockConnected(false);
+      client.abort();
+    };
+  }, []);
+
   // Auto-scroll to bottom when new trades are added
   useEffect(() => {
-    if (tradesContainerRef.current) {
-      tradesContainerRef.current.scrollTop =
-        tradesContainerRef.current.scrollHeight;
+    if (tradesContainerRef.current && activeTab === 0 && autoScrollTrades && trades.length > 0) {
+      const container = tradesContainerRef.current;
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 100);
     }
-  }, [trades]);
+  }, [trades, activeTab, autoScrollTrades]);
+
+  // Auto-scroll to bottom when new blocks are added
+  useEffect(() => {
+    if (blocksContainerRef.current && activeTab === 2 && autoScrollBlocks && blocks.length > 0) {
+      const container = blocksContainerRef.current;
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 100);
+    }
+  }, [blocks, activeTab, autoScrollBlocks]);
+
+  // Handle manual scrolling to disable auto-scroll when user scrolls up
+  const handleTradesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    // Ignore scroll events if we're programmatically scrolling
+    if (isScrollingTrades) return;
+
+    const container = e.currentTarget;
+    const isAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 250;
+    setAutoScrollTrades(isAtBottom);
+  };
+
+  const handleBlocksScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    // Ignore scroll events if we're programmatically scrolling
+    if (isScrollingBlocks) return;
+
+    const container = e.currentTarget;
+    const isAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 250;
+    setAutoScrollBlocks(isAtBottom);
+  };
+
+  // Enable auto-scroll and scroll to bottom when changing tabs
+  useEffect(() => {
+    if (activeTab === 0) {
+      setAutoScrollTrades(true);
+      if (tradesContainerRef.current && trades.length > 0) {
+        setIsScrollingTrades(true);
+        setTimeout(() => {
+          tradesContainerRef.current!.scrollTop = tradesContainerRef.current!.scrollHeight;
+          // Re-enable scroll event handling after scrolling is complete
+          setTimeout(() => {
+            setIsScrollingTrades(false);
+          }, 1000);
+        }, 0);
+      }
+    } else if (activeTab === 2) {
+      setAutoScrollBlocks(true);
+      if (blocksContainerRef.current && blocks.length > 0) {
+        setIsScrollingBlocks(true);
+        setTimeout(() => {
+          blocksContainerRef.current!.scrollTop = blocksContainerRef.current!.scrollHeight;
+          // Re-enable scroll event handling after scrolling is complete
+          setTimeout(() => {
+            setIsScrollingBlocks(false);
+          }, 1000);
+        }, 0);
+      }
+    }
+  }, [activeTab]); // Only depend on activeTab, not on data length
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -285,11 +499,10 @@ export default function Home() {
                     {competeWith.map((item, index) => (
                       <div
                         key={index}
-                        className={`h-8 flex items-center font-semibold ${
-                          index === currentCompeteCarouselIndex
+                        className={`h-8 flex items-center font-semibold ${index === currentCompeteCarouselIndex
                             ? 'text-blue-400'
                             : 'text-gray-300'
-                        }`}
+                          }`}
                       >
                         {item.web2}
                       </div>
@@ -307,11 +520,10 @@ export default function Home() {
                     {competeWith.map((item, index) => (
                       <div
                         key={index}
-                        className={`h-8 flex items-center font-semibold ${
-                          index === currentCompeteCarouselIndex
+                        className={`h-8 flex items-center font-semibold ${index === currentCompeteCarouselIndex
                             ? 'text-red-400'
                             : 'text-gray-300'
-                        }`}
+                          }`}
                       >
                         {item.web3}
                       </div>
@@ -439,95 +651,218 @@ export default function Home() {
             </div>
 
             <div className="relative">
-              {/* Real-time Trading Feed */}
+              {/* Tabbed Interface */}
               <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 p-8 rounded-2xl border border-green-800/30">
-                <div className="text-green-300 text-xs font-semibold tracking-wider uppercase mb-6 flex items-center">
-                  <div
-                    className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}
-                  ></div>
-                  LIVE TRADES FROM REALTIME API
+                {/* Tab Navigation */}
+                <div className="flex space-x-1 mb-6 bg-gray-800/50 p-1 rounded-lg">
+                  <button
+                    onClick={() => setActiveTab(0)}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 0
+                        ? 'bg-green-600 text-white'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      }`}
+                  >
+                    Live Trades
+                  </button>
+                  <button
+                    onClick={() => setActiveTab(1)}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 1
+                        ? 'bg-green-600 text-white'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      }`}
+                  >
+                    Chart
+                  </button>
+                  <button
+                    onClick={() => setActiveTab(2)}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 2
+                        ? 'bg-green-600 text-white'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      }`}
+                  >
+                    Live Blocks
+                  </button>
                 </div>
 
-                <div className="relative">
-                  <div
-                    className="space-y-3 max-h-80 overflow-y-auto scrollbar-hidden"
-                    ref={tradesContainerRef}
-                  >
-                    {trades.length === 0 ? (
-                      <div className="text-center text-gray-400 py-8">
-                        <div className="animate-pulse">
-                          Connecting to live feed...
-                        </div>
-                      </div>
-                    ) : (
-                      trades.map(trade => {
-                        const entries = Object.entries(trade.balanceChanges);
-                        const positive = entries.find(
-                          ([, amount]) => parseInt(amount as string) > 0
-                        );
-                        const negative = entries.find(
-                          ([, amount]) => parseInt(amount as string) < 0
-                        );
+                {/* Tab Content */}
+                {activeTab === 0 && (
+                  <div>
+                    <div className="text-green-300 text-xs font-semibold tracking-wider uppercase mb-6 flex items-center">
+                      <div
+                        className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}
+                      ></div>
+                      LIVE TRADES FROM REALTIME API
+                    </div>
 
-                        if (!positive || !negative) return null;
-
-                        const boughtToken = formatTokenName(positive[0]);
-                        const soldToken = formatTokenName(negative[0]);
-                        const boughtAmount = formatAmount(
-                          positive[1],
-                          positive[0]
-                        );
-                        const soldAmount = formatAmount(
-                          negative[1],
-                          negative[0]
-                        );
-
-                        return (
-                          <div
-                            key={trade.id}
-                            className="bg-gray-800/30 p-4 rounded-lg border border-gray-700 hover:border-green-500 transition-colors trade-item"
-                          >
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="text-green-300 font-mono text-sm">
-                                {trade.trader.length >= 15
-                                  ? `${trade.trader.substring(0, 12)}…`
-                                  : trade.trader}{' '}
-                                swapped
-                              </div>
-                              <div className="text-gray-400 text-xs">
-                                {trade.timestamp}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="text-white text-sm">
-                                {soldAmount} {soldToken} → {boughtAmount}{' '}
-                                {boughtToken}
-                              </div>
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                              <div></div>
-                              <a
-                                href={`https://nearblocks.io/txns/${trade.transactionId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-blue-300 text-xs transition-colors"
-                              >
-                                View Tx →
-                              </a>
+                    <div className="relative">
+                      <div
+                        className="space-y-3 max-h-80 overflow-y-auto scrollbar-hidden"
+                        ref={tradesContainerRef}
+                        onScroll={handleTradesScroll}
+                      >
+                        {trades.length === 0 ? (
+                          <div className="text-center text-gray-400 py-8">
+                            <div className="animate-pulse">
+                              Connecting to live feed...
                             </div>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
+                        ) : (
+                          trades.map(trade => {
+                            const entries = Object.entries(trade.balanceChanges);
+                            const positive = entries.find(
+                              ([, amount]) => parseInt(amount as string) > 0
+                            );
+                            const negative = entries.find(
+                              ([, amount]) => parseInt(amount as string) < 0
+                            );
 
-                  {/* Top fade overlay */}
-                  {trades.length > 0 && (
-                    <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-green-900/20 to-transparent pointer-events-none"></div>
-                  )}
-                </div>
+                            if (!positive || !negative) return null;
+
+                            const boughtToken = formatTokenName(positive[0]);
+                            const soldToken = formatTokenName(negative[0]);
+                            const boughtAmount = formatAmount(
+                              positive[1],
+                              positive[0]
+                            );
+                            const soldAmount = formatAmount(
+                              negative[1],
+                              negative[0]
+                            );
+
+                            return (
+                              <div
+                                key={trade.id}
+                                className="bg-gray-800/30 p-4 rounded-lg border border-gray-700 hover:border-green-500 transition-colors trade-item"
+                              >
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="text-green-300 font-mono text-sm">
+                                    {trade.trader.length >= 15
+                                      ? `${trade.trader.substring(0, 12)}…`
+                                      : trade.trader}{' '}
+                                    swapped
+                                  </div>
+                                  <div className="text-gray-400 text-xs">
+                                    {trade.timestamp}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="text-white text-sm">
+                                    {soldAmount} {soldToken} → {boughtAmount}{' '}
+                                    {boughtToken}
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                  <div></div>
+                                  <a
+                                    href={`https://nearblocks.io/txns/${trade.transactionId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:text-blue-300 text-xs transition-colors"
+                                  >
+                                    View Tx →
+                                  </a>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      {/* Top fade overlay */}
+                      {trades.length > 0 && (
+                        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-green-900/20 to-transparent pointer-events-none"></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 1 && (
+                  <div>
+                    <div className="text-green-300 text-xs font-semibold tracking-wider uppercase mb-6">
+                      EMBEDDABLE CHART
+                    </div>
+                    <div className="relative">
+                      <iframe
+                        src="https://chart.intear.tech/?token=blackdragon.tkn.near"
+                        className="w-full h-80 rounded-lg border border-gray-700"
+                        title="Token Chart"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 2 && (
+                  <div>
+                    <div className="text-green-300 text-xs font-semibold tracking-wider uppercase mb-6 flex items-center">
+                      <div
+                        className={`w-2 h-2 rounded-full mr-2 ${isBlockConnected ? 'bg-green-400' : 'bg-red-400'}`}
+                      ></div>
+                      LIVE BLOCKS WITH LATENCY
+                    </div>
+
+                    <div className="relative">
+                      <div
+                        className="space-y-3 max-h-80 overflow-y-auto scrollbar-hidden"
+                        ref={blocksContainerRef}
+                        onScroll={handleBlocksScroll}
+                      >
+                        {blocks.length === 0 ? (
+                          <div className="text-center text-gray-400 py-8">
+                            <div className="animate-pulse">
+                              Connecting to block feed...
+                            </div>
+                          </div>
+                        ) : (
+                          blocks.map((block, index) => (
+                            <div
+                              key={`${block.blockHeight}-${index}`}
+                              className="bg-gray-800/30 p-4 rounded-lg border border-gray-700 hover:border-green-500 transition-colors trade-item"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="text-green-300 font-mono text-sm">
+                                  Block #{block.blockHeight.toLocaleString()}
+                                </div>
+                                {block.finalizedLatency !== null && (
+                                  <div className={`text-xs px-2 py-1 rounded ${block.finalizedLatency < 2
+                                      ? 'bg-green-600 text-green-100'
+                                      : block.finalizedLatency < 5
+                                        ? 'bg-yellow-600 text-yellow-100'
+                                        : 'bg-red-600 text-red-100'
+                                    }`}>
+                                    {block.finalizedLatency.toFixed(2)}s
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="space-y-1 mb-2">
+                                <div className="text-gray-300 text-xs">
+                                  <span className="text-blue-400">Produced:</span> {block.blockProductionTime}
+                                </div>
+                                <div className="text-gray-300 text-xs">
+                                  <span className="text-yellow-400">Finalized:</span> {
+                                    block.finalizedTime || (
+                                      <span className="text-gray-500 italic">Loading...</span>
+                                    )
+                                  }
+                                </div>
+                                <div className="text-gray-300 text-xs">
+                                  <span className="text-green-400">Received in browser:</span> {block.frontendReceiveTime}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Top fade overlay */}
+                      {blocks.length > 0 && (
+                        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-green-900/20 to-transparent pointer-events-none"></div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -628,8 +963,7 @@ export default function Home() {
                 Bettear Bot
               </h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                The fastest trading bot on NEAR Protocol. Blink and it&apos;s
-                final
+                The fastest trading bot on NEAR Protocol. Final before you could say &quot;Intear&quot;
               </p>
 
               <div className="space-y-6 mb-8">
@@ -643,7 +977,7 @@ export default function Home() {
                 <div className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-purple-500 rounded-full flex-shrink-0 mt-1"></div>
                   <p className="text-gray-300">
-                    Have an unfair advantage: Trade much faster than on official
+                    Unfair advantage: Trade much faster than on official
                     websites
                   </p>
                 </div>
@@ -786,9 +1120,9 @@ export default function Home() {
         <div
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: 'url("TODO")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundImage: 'url("/pumpitbetty.png")',
+            backgroundSize: 'contain',
+            backgroundPosition: 'right bottom',
             backgroundRepeat: 'no-repeat',
           }}
         ></div>
@@ -926,11 +1260,10 @@ export default function Home() {
                       <button
                         key={index}
                         onClick={() => setCurrentOracleIndex(index)}
-                        className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 cursor-pointer ${
-                          index === currentOracleIndex
+                        className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 cursor-pointer ${index === currentOracleIndex
                             ? 'bg-yellow-400 shadow-lg shadow-yellow-400/50'
                             : 'bg-gray-600 hover:bg-gray-500'
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
@@ -985,13 +1318,13 @@ export default function Home() {
         }
 
         .trade-item {
-          animation: slideInFromBottom 0.5s ease-out;
+          animation: slideInFromBottom 0.3s ease-out;
         }
 
         @keyframes slideInFromBottom {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
@@ -1000,12 +1333,13 @@ export default function Home() {
         }
 
         .space-y-3 > * + * {
-          transition: transform 0.3s ease-out;
+          transition: transform 0.2s ease-out;
         }
 
         .scrollbar-hidden {
           -ms-overflow-style: none; /* Internet Explorer 10+ */
           scrollbar-width: none; /* Firefox */
+          scroll-behavior: smooth;
         }
 
         .scrollbar-hidden::-webkit-scrollbar {
