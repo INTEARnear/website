@@ -36,7 +36,7 @@ export const blogPosts: BlogPost[] = [
 - [Jump AMM](https://app.jumpdefi.xyz/swap): Another DEX that is going to be launched on mainnet. We're looking forward to integrating it in our aggregator to facilitate usage of new DEXes, which is very important in the beginning for bootstrapping liquidity.
 - Also, we can integrate common wrap/unwrap zero-fee functionality for common tokens, such as NEAR/wNEAR (wrapping directly using \`wrap.near\`), or NEAR/STNEAR (staking directly / fast unstaking on Meta Pool) to make all actions available in one interface, with guaranteed best prices. For example, is fast STNEAR unstake (with a small fee) better than just selling STNEAR on Rhea? The user doesn't have to worry about this, as the interface always selects the best value.
 
-Having found so many use cases, we decided to build it, and more importantly, release the API for the public. If you're a wallet developer, you can [access](https://docs.intear.io/docs/dex-aggregator) the API and start using it in your wallet today. This makes it easier to build new wallets, trading apps, or agents that control their portfolio, as developers don't have to implement each and every DEX individually.
+Having found so many use cases, we decided to build it, and more importantly, release the API for the public. If you're a wallet developer, you can [access](https://docs.intear.tech/docs/dex-aggregator) the API and start using it in your wallet today. This makes it easier to build new wallets, trading apps, or agents that control their portfolio, as developers don't have to implement each and every DEX individually.
 
 ![DEX Aggregator Launched in Intear Wallet](/blog1-img1.jpg)
 
