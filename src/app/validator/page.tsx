@@ -103,7 +103,7 @@ export default function ValidatorPage() {
                   </h3>
                   <div className="text-3xl font-bold text-blue-400">5%</div>
                   <p className="text-gray-400 text-sm mt-2">
-                    Low fee for high potential returns
+                    Low fee for high stability
                   </p>
                 </div>
 
