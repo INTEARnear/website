@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { EventStreamClient } from '@intear/inevents-websocket-client';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 interface TradeEvent {
   balance_changes: { [key: string]: string };
@@ -242,7 +240,10 @@ export default function Home() {
             };
 
             setTrades(prev => {
-              const updated = prev.length > 1100 ? [...prev, trade].slice(-1000) : [...prev, trade]; // Keep last 1000, remove from top
+              const updated =
+                prev.length > 1100
+                  ? [...prev, trade].slice(-1000)
+                  : [...prev, trade]; // Keep last 1000, remove from top
               return updated;
             });
           }
@@ -263,7 +264,9 @@ export default function Home() {
   }, []);
 
   // Function to fetch finalized block timestamp with retry logic
-  const fetchFinalizedTime = async (blockHeight: number): Promise<{ time: string, timestamp: number } | null> => {
+  const fetchFinalizedTime = async (
+    blockHeight: number
+  ): Promise<{ time: string; timestamp: number } | null> => {
     const targetBlockHeight = blockHeight + 2;
     const maxRetries = 5;
 
@@ -272,16 +275,16 @@ export default function Home() {
         const response = await fetch('https://rpc.intear.tech', {
           method: 'POST',
           headers: {
-            'content-type': 'application/json'
+            'content-type': 'application/json',
           },
           body: JSON.stringify({
             jsonrpc: '2.0',
             method: 'block',
             id: 'dontcare',
             params: {
-              block_id: targetBlockHeight
-            }
-          })
+              block_id: targetBlockHeight,
+            },
+          }),
         });
 
         if (!response.ok) {
@@ -290,20 +293,27 @@ export default function Home() {
 
         const data = await response.json();
         if (data.result?.header?.timestamp_nanosec) {
-          const finalizedTimestamp = parseInt(data.result.header.timestamp_nanosec) / 1000000;
-          const formattedTime = new Date(finalizedTimestamp).toLocaleTimeString('en-US', {
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            fractionalSecondDigits: 3
-          });
+          const finalizedTimestamp =
+            parseInt(data.result.header.timestamp_nanosec) / 1000000;
+          const formattedTime = new Date(finalizedTimestamp).toLocaleTimeString(
+            'en-US',
+            {
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              fractionalSecondDigits: 3,
+            }
+          );
           return { time: formattedTime, timestamp: finalizedTimestamp };
         } else {
           throw new Error('Invalid response format');
         }
       } catch (error) {
-        console.log(`Attempt ${attempt}/${maxRetries} failed for block ${targetBlockHeight}:`, error);
+        console.log(
+          `Attempt ${attempt}/${maxRetries} failed for block ${targetBlockHeight}:`,
+          error
+        );
 
         if (attempt < maxRetries) {
           // Wait 200ms before retry
@@ -330,26 +340,32 @@ export default function Home() {
           async event => {
             if (!isActive) return;
 
-            const blockTimestamp = parseInt(event.block_timestamp_nanosec) / 1000000;
+            const blockTimestamp =
+              parseInt(event.block_timestamp_nanosec) / 1000000;
             const frontendReceiveTimestamp = Date.now();
             const latency = (frontendReceiveTimestamp - blockTimestamp) / 1000; // Convert to seconds
 
             const blockInfo: BlockInfo = {
               blockHeight: event.block_height,
               timestamp: new Date(blockTimestamp).toLocaleTimeString(),
-              blockProductionTime: new Date(blockTimestamp).toLocaleTimeString('en-US', {
+              blockProductionTime: new Date(blockTimestamp).toLocaleTimeString(
+                'en-US',
+                {
+                  hour12: false,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  fractionalSecondDigits: 3,
+                }
+              ),
+              frontendReceiveTime: new Date(
+                frontendReceiveTimestamp
+              ).toLocaleTimeString('en-US', {
                 hour12: false,
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
-                fractionalSecondDigits: 3
-              }),
-              frontendReceiveTime: new Date(frontendReceiveTimestamp).toLocaleTimeString('en-US', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                fractionalSecondDigits: 3
+                fractionalSecondDigits: 3,
               }),
               finalizedTime: null, // Will be filled asynchronously
               latency: latency, // Keep original latency for reference
@@ -357,7 +373,10 @@ export default function Home() {
             };
 
             setBlocks(prev => {
-              const updated = prev.length > 1100 ? [...prev, blockInfo].slice(-1000) : [...prev, blockInfo]; // Keep last 1000 blocks
+              const updated =
+                prev.length > 1100
+                  ? [...prev, blockInfo].slice(-1000)
+                  : [...prev, blockInfo]; // Keep last 1000 blocks
               return updated;
             });
 
@@ -366,12 +385,17 @@ export default function Home() {
               if (!isActive || !finalizedData) return;
 
               // Calculate latency from finalized time
-              const finalizedLatency = (frontendReceiveTimestamp - finalizedData.timestamp) / 1000;
+              const finalizedLatency =
+                (frontendReceiveTimestamp - finalizedData.timestamp) / 1000;
 
               setBlocks(prev =>
                 prev.map(block =>
                   block.blockHeight === event.block_height
-                    ? { ...block, finalizedTime: finalizedData.time, finalizedLatency }
+                    ? {
+                        ...block,
+                        finalizedTime: finalizedData.time,
+                        finalizedLatency,
+                      }
                     : block
                 )
               );
@@ -395,7 +419,12 @@ export default function Home() {
 
   // Auto-scroll to bottom when new trades are added
   useEffect(() => {
-    if (tradesContainerRef.current && activeTab === 0 && autoScrollTrades && trades.length > 0) {
+    if (
+      tradesContainerRef.current &&
+      activeTab === 0 &&
+      autoScrollTrades &&
+      trades.length > 0
+    ) {
       const container = tradesContainerRef.current;
       setTimeout(() => {
         container.scrollTop = container.scrollHeight;
@@ -405,7 +434,12 @@ export default function Home() {
 
   // Auto-scroll to bottom when new blocks are added
   useEffect(() => {
-    if (blocksContainerRef.current && activeTab === 2 && autoScrollBlocks && blocks.length > 0) {
+    if (
+      blocksContainerRef.current &&
+      activeTab === 2 &&
+      autoScrollBlocks &&
+      blocks.length > 0
+    ) {
       const container = blocksContainerRef.current;
       setTimeout(() => {
         container.scrollTop = container.scrollHeight;
@@ -419,7 +453,9 @@ export default function Home() {
     if (isScrollingTrades) return;
 
     const container = e.currentTarget;
-    const isAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 250;
+    const isAtBottom =
+      container.scrollHeight - container.clientHeight - container.scrollTop <
+      250;
     setAutoScrollTrades(isAtBottom);
   };
 
@@ -428,7 +464,9 @@ export default function Home() {
     if (isScrollingBlocks) return;
 
     const container = e.currentTarget;
-    const isAtBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 250;
+    const isAtBottom =
+      container.scrollHeight - container.clientHeight - container.scrollTop <
+      250;
     setAutoScrollBlocks(isAtBottom);
   };
 
@@ -439,7 +477,8 @@ export default function Home() {
       if (tradesContainerRef.current && trades.length > 0) {
         setIsScrollingTrades(true);
         setTimeout(() => {
-          tradesContainerRef.current!.scrollTop = tradesContainerRef.current!.scrollHeight;
+          tradesContainerRef.current!.scrollTop =
+            tradesContainerRef.current!.scrollHeight;
           // Re-enable scroll event handling after scrolling is complete
           setTimeout(() => {
             setIsScrollingTrades(false);
@@ -451,7 +490,8 @@ export default function Home() {
       if (blocksContainerRef.current && blocks.length > 0) {
         setIsScrollingBlocks(true);
         setTimeout(() => {
-          blocksContainerRef.current!.scrollTop = blocksContainerRef.current!.scrollHeight;
+          blocksContainerRef.current!.scrollTop =
+            blocksContainerRef.current!.scrollHeight;
           // Re-enable scroll event handling after scrolling is complete
           setTimeout(() => {
             setIsScrollingBlocks(false);
@@ -459,24 +499,22 @@ export default function Home() {
         }, 0);
       }
     }
-  }, [activeTab]); // Only depend on activeTab, not on data length
+  }, [activeTab, trades.length, blocks.length]); // Only depend on activeTab, not on data length
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
       {/* Hero Section */}
       <section className="relative bg-black overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        {/* Background Image with Edge Fade Overlays */}
+        <div className="absolute inset-0">
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 bg-cover bg-bottom bg-no-repeat"
             style={{
-              backgroundImage: `radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                             radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                             radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%)`,
+              backgroundImage: `url('/bg.png')`,
             }}
           ></div>
+          {/* Edge Fade Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
@@ -499,10 +537,11 @@ export default function Home() {
                     {competeWith.map((item, index) => (
                       <div
                         key={index}
-                        className={`h-8 flex items-center font-semibold ${index === currentCompeteCarouselIndex
+                        className={`h-8 flex items-center font-semibold ${
+                          index === currentCompeteCarouselIndex
                             ? 'text-blue-400'
                             : 'text-gray-300'
-                          }`}
+                        }`}
                       >
                         {item.web2}
                       </div>
@@ -520,10 +559,11 @@ export default function Home() {
                     {competeWith.map((item, index) => (
                       <div
                         key={index}
-                        className={`h-8 flex items-center font-semibold ${index === currentCompeteCarouselIndex
+                        className={`h-8 flex items-center font-semibold ${
+                          index === currentCompeteCarouselIndex
                             ? 'text-red-400'
                             : 'text-gray-300'
-                          }`}
+                        }`}
                       >
                         {item.web3}
                       </div>
@@ -657,28 +697,31 @@ export default function Home() {
                 <div className="flex space-x-1 mb-6 bg-gray-800/50 p-1 rounded-lg">
                   <button
                     onClick={() => setActiveTab(0)}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 0
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 0
                         ? 'bg-green-600 text-white'
                         : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                      }`}
+                    }`}
                   >
                     Live Trades
                   </button>
                   <button
                     onClick={() => setActiveTab(1)}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 1
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 1
                         ? 'bg-green-600 text-white'
                         : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                      }`}
+                    }`}
                   >
                     Chart
                   </button>
                   <button
                     onClick={() => setActiveTab(2)}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 2
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 2
                         ? 'bg-green-600 text-white'
                         : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                      }`}
+                    }`}
                   >
                     Live Blocks
                   </button>
@@ -708,7 +751,9 @@ export default function Home() {
                           </div>
                         ) : (
                           trades.map(trade => {
-                            const entries = Object.entries(trade.balanceChanges);
+                            const entries = Object.entries(
+                              trade.balanceChanges
+                            );
                             const positive = entries.find(
                               ([, amount]) => parseInt(amount as string) > 0
                             );
@@ -825,12 +870,15 @@ export default function Home() {
                                   Block #{block.blockHeight.toLocaleString()}
                                 </div>
                                 {block.finalizedLatency !== null && (
-                                  <div className={`text-xs px-2 py-1 rounded ${block.finalizedLatency < 2
-                                      ? 'bg-green-600 text-green-100'
-                                      : block.finalizedLatency < 5
-                                        ? 'bg-yellow-600 text-yellow-100'
-                                        : 'bg-red-600 text-red-100'
-                                    }`}>
+                                  <div
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      block.finalizedLatency < 2
+                                        ? 'bg-green-600 text-green-100'
+                                        : block.finalizedLatency < 5
+                                          ? 'bg-yellow-600 text-yellow-100'
+                                          : 'bg-red-600 text-red-100'
+                                    }`}
+                                  >
                                     {block.finalizedLatency.toFixed(2)}s
                                   </div>
                                 )}
@@ -838,17 +886,26 @@ export default function Home() {
 
                               <div className="space-y-1 mb-2">
                                 <div className="text-gray-300 text-xs">
-                                  <span className="text-blue-400">Produced:</span> {block.blockProductionTime}
+                                  <span className="text-blue-400">
+                                    Produced:
+                                  </span>{' '}
+                                  {block.blockProductionTime}
                                 </div>
                                 <div className="text-gray-300 text-xs">
-                                  <span className="text-yellow-400">Finalized:</span> {
-                                    block.finalizedTime || (
-                                      <span className="text-gray-500 italic">Loading...</span>
-                                    )
-                                  }
+                                  <span className="text-yellow-400">
+                                    Finalized:
+                                  </span>{' '}
+                                  {block.finalizedTime || (
+                                    <span className="text-gray-500 italic">
+                                      Loading...
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-gray-300 text-xs">
-                                  <span className="text-green-400">Received in browser:</span> {block.frontendReceiveTime}
+                                  <span className="text-green-400">
+                                    Received in browser:
+                                  </span>{' '}
+                                  {block.frontendReceiveTime}
                                 </div>
                               </div>
                             </div>
@@ -963,7 +1020,8 @@ export default function Home() {
                 Bettear Bot
               </h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                The fastest trading bot on NEAR Protocol. Final before you could say &quot;Intear&quot;
+                The fastest trading bot on NEAR Protocol. Final before you could
+                say &quot;Intear&quot;
               </p>
 
               <div className="space-y-6 mb-8">
@@ -1260,10 +1318,11 @@ export default function Home() {
                       <button
                         key={index}
                         onClick={() => setCurrentOracleIndex(index)}
-                        className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 cursor-pointer ${index === currentOracleIndex
+                        className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 cursor-pointer ${
+                          index === currentOracleIndex
                             ? 'bg-yellow-400 shadow-lg shadow-yellow-400/50'
                             : 'bg-gray-600 hover:bg-gray-500'
-                          }`}
+                        }`}
                       />
                     ))}
                   </div>
@@ -1296,8 +1355,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <Footer />
 
       <style jsx>{`
         @keyframes slide {

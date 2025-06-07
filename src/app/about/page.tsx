@@ -1,13 +1,8 @@
 'use client';
 
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-
 export default function About() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
       {/* Main Content */}
       <main className="py-20 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,14 +41,14 @@ export default function About() {
                 Intear is dedicated to building the best infrastructure on the
                 best blockchain for the best applications.
               </p>
-              <p className="text-gray-300 text-lg leading-relaxed">
+              <p className="text-gray-300 text-lg leading-relaxed mb-4">
                 Our goals:
-                <ul className="list-disc list-inside">
-                  <li>Build the best wallet in web3 by the end of 2025</li>
-                  <li>Become the best web3 data platform</li>
-                  <li>Make every app on NEAR fast and accessible</li>
-                </ul>
               </p>
+              <ul className="list-disc list-inside text-gray-300 text-lg leading-relaxed">
+                <li>Build the best wallet in web3 by the end of 2025</li>
+                <li>Become the best web3 data platform</li>
+                <li>Make every app on NEAR fast and accessible</li>
+              </ul>
             </div>
 
             <div className="bg-gray-900/50 p-8 rounded-2xl border border-gray-800 mb-8">
@@ -96,8 +91,6 @@ export default function About() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
