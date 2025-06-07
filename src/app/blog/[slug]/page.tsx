@@ -278,7 +278,7 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
   return {
     metadataBase: new URL(
       process.env.NODE_ENV === 'production'
-        ? 'https://intear.tech'
+        ? 'https://intea.rs'
         : 'http://localhost:3000'
     ),
     title: `${post.title} | Intear Blog`,
