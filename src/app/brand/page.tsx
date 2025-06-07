@@ -268,6 +268,49 @@ export default function BrandPage() {
             </div>
           </div>
 
+          {/* Bettear Bot Logo Section */}
+          <div className="mb-12">
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 max-w-2xl mx-auto">
+              <h2 className="text-2xl font-semibold text-white mb-6">
+                Bettear Bot Logo
+              </h2>
+
+              <div className="bg-black rounded-lg p-8 mb-6">
+                <div className="text-center">
+                  <Image
+                    src="/bettearbot.png"
+                    alt="Bettear Bot Logo"
+                    width={256}
+                    height={256}
+                    className="h-64 mx-auto mb-4"
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-2 justify-center">
+                <button
+                  onClick={() => handleDownload('bettearbot.png')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors cursor-pointer inline-flex items-center space-x-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v12m0 0l-4-4m4 4l4-4"
+                    />
+                  </svg>
+                  <span>Download PNG</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Betty Mascot Section */}
           <div className="mb-12">
             <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 max-w-2xl mx-auto">
