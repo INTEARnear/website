@@ -180,14 +180,6 @@ export default function Header() {
                       Data Marketplace
                     </div>
                   </a>
-                  <a
-                    href="/validator"
-                    className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors focus:outline-none focus:bg-gray-800 focus:text-white"
-                    role="menuitem"
-                  >
-                    <div className="font-semibold">Validator</div>
-                    <div className="text-sm text-gray-400">NEAR Validation</div>
-                  </a>
                 </div>
               )}
             </div>
@@ -475,16 +467,6 @@ export default function Header() {
                           <div className="font-medium">Intear Oracle</div>
                           <div className="text-sm text-gray-400">
                             Data Marketplace
-                          </div>
-                        </a>
-                        <a
-                          href="/validator"
-                          onClick={closeMobileMenu}
-                          className="block py-3 px-4 text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <div className="font-medium">Validator</div>
-                          <div className="text-sm text-gray-400">
-                            NEAR Validation
                           </div>
                         </a>
                       </div>

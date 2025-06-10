@@ -72,21 +72,6 @@ export default function Home() {
   const tradesContainerRef = useRef<HTMLDivElement>(null);
   const blocksContainerRef = useRef<HTMLDivElement>(null);
 
-  const partners = [
-    {
-      name: 'MEME.COOKING',
-      url: 'https://meme.cooking',
-      image: '/meme-cooking.webp',
-    },
-    { name: 'AIDOLS', url: 'https://aidols.bot', image: '/aidols.webp' },
-    {
-      name: 'DRAGON TECH',
-      url: 'https://t.me/Dragon_Tech_Bot',
-      image: '/dragontech.webp',
-    },
-    { name: 'POTLOCK', url: 'https://potlock.org', image: '/potlock.webp' },
-  ];
-
   const oracles = [
     ['GPT-4o', 'Centralized AI inference oracle hosted by Intear'],
     [
@@ -131,9 +116,6 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [competeWith.length]);
-
-  // Duplicate the array to create seamless loop
-  const allPartners = [...partners, ...partners, ...partners, ...partners];
 
   // Fetch token metadata
   useEffect(() => {
@@ -583,42 +565,6 @@ export default function Home() {
               >
                 Documentation
               </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Continuous Sliding Partner Logos Section */}
-        <div className="relative border-t border-gray-800 py-12 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h3 className="text-lg font-semibold text-gray-400 tracking-wider uppercase">
-                Our Users
-              </h3>
-            </div>
-            <div className="relative overflow-hidden">
-              <div className="flex space-x-12 animate-slide">
-                {allPartners.map((partner, index) => (
-                  <div
-                    key={`${partner.name}-${index}`}
-                    className="flex-shrink-0 whitespace-nowrap"
-                  >
-                    <a
-                      href={partner.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block hover:opacity-80 transition-opacity"
-                    >
-                      <Image
-                        src={partner.image}
-                        alt={partner.name}
-                        width={120}
-                        height={32}
-                        className="h-8 w-auto hover:grayscale-0 transition-all duration-300"
-                      />
-                    </a>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>

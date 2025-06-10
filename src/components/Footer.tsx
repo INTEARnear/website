@@ -116,14 +116,6 @@ export default function Footer() {
                   Intear Oracle
                 </a>
               </li>
-              <li>
-                <a
-                  href="/validator"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Validator
-                </a>
-              </li>
             </ul>
           </div>
 
