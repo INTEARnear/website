@@ -254,7 +254,7 @@ export default function Home() {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const response = await fetch('https://rpc.intear.tech', {
+        const response = await fetch('https://rpc.intea.rs', {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
