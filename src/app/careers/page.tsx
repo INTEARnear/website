@@ -24,15 +24,6 @@ export default function CareersPage() {
                   contracts, and backend services.
                 </p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="text-xl font-semibold text-blue-400 mb-3">
-                  Senior Next.js Engineer
-                </h3>
-                <p className="text-gray-300">
-                  Create modern web applications and user interfaces for our
-                  blockchain products.
-                </p>
-              </div>
             </div>
           </div>
 
