@@ -68,12 +68,12 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="https://rainy.intear.tech"
+                  href="https://rainy.intea.rs"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  Rainy Indexing
+                  Rainy Developer Platform
                 </a>
               </li>
               <li>

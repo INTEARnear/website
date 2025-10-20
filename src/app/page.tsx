@@ -596,10 +596,9 @@ export default function Home() {
               </div>
               <h4 className="text-4xl font-bold mb-6 font-roboto">Rainy</h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                Reliable RPC with additional methods for batching and token
-                data, combined with a powerful cloud indexer platform,
-                meta-transaction relayers, private wallet / Telegram bot
-                hosting, and more.
+                Reliable geographically-distributed RPC with additional methods for batching and token
+                data, coming soon: a powerful cloud indexer platform, meta-transaction relayers,
+                private wallet / Telegram bot hosting, and more
               </p>
 
               <div className="space-y-6 mb-8">
@@ -627,12 +626,12 @@ export default function Home() {
               </div>
 
               <div className="flex space-x-4">
-                <button className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors cursor-pointer">
+                <a href="https://rainy.intea.rs" target="_blank" rel="noopener noreferrer" className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors cursor-pointer">
                   Start building
-                </button>
-                <button className="text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-900 transition-colors cursor-pointer">
+                </a>
+                <a href="https://docs.intear.tech" target="_blank" rel="noopener noreferrer" className="text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-900 transition-colors cursor-pointer">
                   Learn more →
-                </button>
+                </a>
               </div>
             </div>
 
@@ -954,8 +953,144 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Bettear Bot Section */}
+      {/* DEX Aggregator Section */}
       <section className="py-20 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="relative">
+              {/* Supported Protocols Grid */}
+              <div className="bg-gradient-to-br from-orange-900/20 to-teal-900/20 p-8 rounded-2xl border border-orange-800/30">
+                <div className="text-orange-300 text-xs font-semibold tracking-wider uppercase mb-6">
+                  SUPPORTED PROTOCOLS
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      Rhea Finance
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Biggest AMM DEX
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      Near Intents
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Request-for-quote DEX & bridge
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      Rhea DCL
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Concentrated Liquidity AMM
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      AIdols
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      AI Agent Token Launchpad
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      Meta Pool stNEAR
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Liquid Staking
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      LiNEAR
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Liquid Staking
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      Rhea rNEAR
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Liquid Staking
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors">
+                    <div className="text-white font-semibold mb-1">
+                      xRHEA
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Yield-bearing Staked RHEA Token
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-orange-500 transition-colors col-span-2">
+                    <div className="text-white font-semibold mb-1">
+                      Wrap / Unwrap
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Native NEAR coin to wrap.near
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-orange-500 text-sm font-semibold tracking-wider uppercase mb-4">
+                UNIFIED TRADING API
+              </div>
+              <h4 className="text-4xl font-bold mb-6 font-roboto">
+                DEX Aggregator
+              </h4>
+              <p className="text-gray-300 text-lg mb-8 leading-relaxed">
+                One API to access all NEAR DeFi protocols. Get the best
+                prices across multiple ways to swap tokens.
+              </p>
+
+              <div className="space-y-6 mb-8">
+                <div className="flex items-start space-x-4">
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-1"></div>
+                  <p className="text-gray-300">
+                    Single API endpoint for swaps across all major protocols
+                  </p>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-1"></div>
+                  <p className="text-gray-300">
+                    Returns serialized transactions ready to sign
+                  </p>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex-shrink-0 mt-1"></div>
+                  <p className="text-gray-300">
+                    Handles wrapping, storage deposits, slippage on its own
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex space-x-4">
+                <a
+                  href="https://docs.intear.tech/docs/dex-aggregator/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors inline-block cursor-pointer"
+                >
+                  API Documentation
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bettear Bot Section */}
+      <section className="py-20 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
@@ -966,8 +1101,8 @@ export default function Home() {
                 Bettear Bot
               </h4>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                The fastest trading bot on NEAR Protocol. Final before you could
-                say &quot;Intear&quot;
+                The fastest trading bot on NEAR Protocol. Finalized before you could
+                say &quot;In tears&quot;
               </p>
 
               <div className="space-y-6 mb-8">
@@ -1142,7 +1277,7 @@ export default function Home() {
               Solana, and Sui ecosystems.
               <br />
               Or if you&apos;re a degen: buy and sell from 1000 accounts with a
-              simple dashboard.
+              simple dashboard. Basically a volume bot, but a little more customizable.
             </p>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">

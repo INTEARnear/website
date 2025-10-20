@@ -129,7 +129,7 @@ export default function Header() {
                   aria-labelledby="products-menu-button"
                 >
                   <a
-                    href="https://rainy.intear.tech"
+                    href="https://rainy.intea.rs"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors focus:outline-none focus:bg-gray-800 focus:text-white"
@@ -290,6 +290,16 @@ export default function Header() {
               Create Wallet
             </a>
 
+            <a
+              href="https://rainy.intea.rs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:block bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors focus:outline-none"
+              aria-label="Rainy Developer Platform"
+            >
+              Rainy Dev Platform
+            </a>
+
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMobileMenu}
@@ -410,7 +420,7 @@ export default function Header() {
                     {openDropdown === 'mobile-products' && (
                       <div className="mt-2 space-y-2 pl-4">
                         <a
-                          href="https://rainy.intear.tech"
+                          href="https://rainy.intea.rs"
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={closeMobileMenu}
