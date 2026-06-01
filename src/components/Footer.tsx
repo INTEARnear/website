@@ -188,28 +188,10 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="/careers"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a
                   href="/brand"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Brand Kit
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://t.me/slimytentacles"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Contact Sales
                 </a>
               </li>
               <li>

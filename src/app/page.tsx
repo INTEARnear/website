@@ -145,27 +145,17 @@ export default function Home() {
     fetchTokenMetadata();
   }, []);
 
-  // Helper function to format token names
   const formatTokenName = (tokenAddress: string): string => {
     if (tokenAddress === 'wrap.near' || tokenAddress === 'near') return 'NEAR';
 
     const metadata = tokenMetadata[tokenAddress];
     if (metadata) {
       return metadata.symbol;
+    } else {
+      return 'UNKNOWN';
     }
-
-    if (tokenAddress.includes('.meme-cooking.near')) {
-      const prefix = tokenAddress.split('.')[0];
-      return prefix.toUpperCase();
-    }
-    if (tokenAddress.includes('.')) {
-      const parts = tokenAddress.split('.');
-      return parts[0].toUpperCase();
-    }
-    return tokenAddress.substring(0, 8).toUpperCase();
   };
 
-  // Helper function to format amounts
   const formatAmount = (amount: string, tokenAddress: string): string => {
     const metadata = tokenMetadata[tokenAddress];
     const decimals = metadata?.decimals || 24;
@@ -504,7 +494,7 @@ export default function Home() {
             <h2 className="text-5xl md:text-7xl font-bold mb-8 font-roboto leading-tight">
               Web3 experience that
               <br />
-              doesn&apos;t suck
+              sucks
             </h2>
             <div className="text-xl md:text-2xl mb-12 text-gray-300 max-w-4xl mx-auto leading-relaxed">
               <div className="flex flex-wrap justify-center items-center">
@@ -525,7 +515,7 @@ export default function Home() {
                             : 'text-gray-300'
                         }`}
                       >
-                        {item.web2}
+                        {item.web3}
                       </div>
                     ))}
                   </div>
@@ -547,14 +537,14 @@ export default function Home() {
                             : 'text-gray-300'
                         }`}
                       >
-                        {item.web3}
+                        {item.web2}
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
               <br />
-              Give your users an experience better than web2 with Intear
+              We&apos;re dead. But APIs are still alive for the foreseeable future.
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a
